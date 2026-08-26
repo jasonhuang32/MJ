@@ -13,7 +13,13 @@
       duration: 2650,
     },
     body: {
-      character: "assets-v2/body-character.png",
+      poses: [
+        "assets-v2/body-pose-1.png",
+        "assets-v2/body-pose-2.png",
+        "assets-v2/body-pose-3.png",
+        "assets-v2/body-pose-4.png",
+        "assets-v2/body-pose-5.png",
+      ],
       audio: "assets/body.m4a",
       duration: 3150,
     },
@@ -254,31 +260,67 @@
     return animations;
   }
 
-  function animateHeart(rig, index, duration) {
+  function animatePose(image, index, duration) {
+    const ranges = [
+      [0, .19],
+      [.16, .39],
+      [.36, .60],
+      [.57, .80],
+      [.77, 1],
+    ];
+    const [start, end] = ranges[index];
+    const fade = .018;
+    const frames = [];
+    if (start === 0) {
+      frames.push({ offset: 0, opacity: 1 });
+    } else {
+      frames.push(
+        { offset: 0, opacity: 0 },
+        { offset: Math.max(0, start - fade), opacity: 0 },
+        { offset: start, opacity: 1 },
+      );
+    }
+    frames.push({ offset: end, opacity: 1 });
+    if (end < 1) {
+      frames.push(
+        { offset: Math.min(1, end + fade), opacity: 0 },
+        { offset: 1, opacity: 0 },
+      );
+    }
+    return image.animate(frames, {
+      duration,
+      easing: "linear",
+      fill: "both",
+    });
+  }
+
+  function animateHeart(character, config, duration) {
     const heart = document.createElement("img");
     heart.src = chrome.runtime.getURL("assets-v2/heart.svg");
     heart.alt = "";
     heart.setAttribute("aria-hidden", "true");
-    const sizes = ["13%", "9%", "6.5%"];
-    const left = ["73%", "79%", "68%"];
-    const top = ["39%", "28%", "19%"];
     heart.style.cssText = [
       "position:absolute",
-      `left:${left[index]}`,
-      `top:${top[index]}`,
-      `width:${sizes[index]}`,
+      `left:${config.left}`,
+      `top:${config.top}`,
+      `width:${config.size}`,
       "height:auto",
       "pointer-events:none",
+      "z-index:20",
       "will-change:transform,opacity",
       "filter:drop-shadow(0 3px 3px rgba(60,15,45,.16))",
     ].join(";");
-    rig.append(heart);
+    character.append(heart);
+    const pop = Math.min(.96, config.start + .045);
+    const drift = Math.min(.98, config.start + .18);
+    const finish = Math.min(1, config.start + .31);
     return heart.animate([
-      { offset: 0, opacity: 0, transform: "translate(0,28px) scale(.35) rotate(-8deg)" },
-      { offset: .18 + index * .07, opacity: 0, transform: "translate(0,28px) scale(.35) rotate(-8deg)" },
-      { offset: .34 + index * .07, opacity: 1, transform: "translate(8px,0) scale(1) rotate(5deg)" },
-      { offset: .72, opacity: .95, transform: "translate(26px,-28px) scale(.9) rotate(-5deg)" },
-      { offset: 1, opacity: 0, transform: "translate(44px,-72px) scale(.55) rotate(8deg)" },
+      { offset: 0, opacity: 0, transform: "translate(-50%,-50%) scale(.08) rotate(-12deg)" },
+      { offset: config.start, opacity: 0, transform: "translate(-50%,-50%) scale(.08) rotate(-12deg)" },
+      { offset: pop, opacity: 1, transform: "translate(-50%,-50%) scale(1.08) rotate(7deg)" },
+      { offset: drift, opacity: .96, transform: `translate(calc(-50% + ${config.dx * .55}px),calc(-50% + ${config.dy * .55}px)) scale(.92) rotate(-5deg)` },
+      { offset: finish, opacity: 0, transform: `translate(calc(-50% + ${config.dx}px),calc(-50% + ${config.dy}px)) scale(.62) rotate(10deg)` },
+      { offset: 1, opacity: 0, transform: `translate(calc(-50% + ${config.dx}px),calc(-50% + ${config.dy}px)) scale(.62) rotate(10deg)` },
     ], { duration, easing: "cubic-bezier(.22,.65,.28,1)", fill: "both" });
   }
 
@@ -296,7 +338,15 @@
     const web = makeLayer("position:absolute;left:15%;top:-2%;width:70%;height:60%;pointer-events:none");
     web.append(makeWebSvg("body"));
     const character = makeLayer("position:absolute;left:14%;top:34%;width:72%;aspect-ratio:1;pointer-events:none");
-    character.append(makeCharacter(variant.character));
+    variant.poses.forEach((source, index) => {
+      const pose = makeCharacter(source);
+      pose.style.position = "absolute";
+      pose.style.inset = "0";
+      pose.style.opacity = index === 0 ? "1" : "0";
+      pose.style.zIndex = String(index + 1);
+      character.append(pose);
+      animations.push(animatePose(pose, index, variant.duration));
+    });
     rig.append(web, character);
     layer.append(rig);
 
@@ -317,8 +367,15 @@
       { transform: "rotate(-2deg) translateY(0)" },
     ], { duration: variant.duration, easing: "ease-in-out", fill: "both" }));
 
-    for (let index = 0; index < 3; index += 1) {
-      animations.push(animateHeart(rig, index, variant.duration));
+    const heartBursts = [
+      { start: .34, left: "69%", top: "49%", size: "9%", dx: 62, dy: -86 },
+      { start: .43, left: "75%", top: "44%", size: "6.5%", dx: 82, dy: -112 },
+      { start: .51, left: "79%", top: "41%", size: "11%", dx: 108, dy: -96 },
+      { start: .60, left: "80%", top: "40%", size: "7.5%", dx: 126, dy: -132 },
+      { start: .68, left: "78%", top: "40%", size: "5.5%", dx: 102, dy: -158 },
+    ];
+    for (const heart of heartBursts) {
+      animations.push(animateHeart(character, heart, variant.duration));
     }
     return animations;
   }

@@ -12,7 +12,7 @@ from collections import deque
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +28,7 @@ ASSETS = {
         "crop": (145, 165, 570, 680),
         "max_size": (1740, 1900),
         "eye_boxes": ((35, 130, 225, 370), (195, 130, 405, 370)),
+        "face_ellipse": (43, 128, 382, 463),
     },
     "body-character": {
         "file": "body-reference.png",
@@ -36,6 +37,44 @@ ASSETS = {
         "eye_boxes": ((35, 75, 245, 325), (195, 80, 380, 325)),
     },
 }
+
+BODY_POSES = tuple(
+    REFERENCE_DIR / "body-poses" / f"pose-{index}.png" for index in range(1, 6)
+)
+
+
+def largest_component(mask: np.ndarray) -> np.ndarray:
+    """Keep the character while discarding detached hearts and video marks."""
+    height, width = mask.shape
+    visited = np.zeros_like(mask, dtype=bool)
+    largest: list[tuple[int, int]] = []
+
+    for start_y, start_x in zip(*np.nonzero(mask & ~visited)):
+        if visited[start_y, start_x]:
+            continue
+        queue: deque[tuple[int, int]] = deque([(int(start_y), int(start_x))])
+        visited[start_y, start_x] = True
+        component: list[tuple[int, int]] = []
+        while queue:
+            y, x = queue.popleft()
+            component.append((y, x))
+            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if (
+                    0 <= ny < height
+                    and 0 <= nx < width
+                    and mask[ny, nx]
+                    and not visited[ny, nx]
+                ):
+                    visited[ny, nx] = True
+                    queue.append((ny, nx))
+        if len(component) > len(largest):
+            largest = component
+
+    result = np.zeros_like(mask, dtype=bool)
+    if largest:
+        ys, xs = zip(*largest)
+        result[np.asarray(ys), np.asarray(xs)] = True
+    return result
 
 
 def fill_holes(mask: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -124,7 +163,9 @@ def enclosed_bright_regions(
 def isolate_character(
     source: Image.Image,
     crop: tuple[int, int, int, int],
-    eye_boxes: tuple[tuple[int, int, int, int], ...],
+    eye_boxes: tuple[tuple[int, int, int, int], ...] = (),
+    face_ellipse: tuple[int, int, int, int] | None = None,
+    keep_largest: bool = False,
 ) -> Image.Image:
     image = source.convert("RGB").crop(crop)
     pixels = np.asarray(image, dtype=np.float32)
@@ -147,6 +188,9 @@ def isolate_character(
     coloured_edge = saturation > 15
     initial = support & (dark_outline | coloured_edge)
 
+    if keep_largest:
+        initial = largest_component(initial)
+
     closed = Image.fromarray(initial.astype(np.uint8) * 255)
     closed = closed.filter(ImageFilter.MaxFilter(17)).filter(ImageFilter.MinFilter(17))
     solid, holes = fill_holes(np.asarray(closed) > 0)
@@ -158,7 +202,17 @@ def isolate_character(
     )
     alpha = np.asarray(matte, dtype=np.uint8).copy()
     alpha[holes] = 255
-    alpha[enclosed_bright_regions(pixels, eye_boxes)] = 255
+
+    if face_ellipse:
+        # Preserve the exact source pixels across the whole mask interior. The
+        # eyes and their black rims therefore remain registered to the mask,
+        # instead of being reconstructed as independent white shapes.
+        face_mask = Image.new("L", image.size)
+        ImageDraw.Draw(face_mask).ellipse(face_ellipse, fill=255)
+        alpha = np.maximum(alpha, np.asarray(face_mask, dtype=np.uint8))
+    else:
+        if eye_boxes:
+            alpha[enclosed_bright_regions(pixels, eye_boxes)] = 255
 
     rgba = np.dstack((pixels.astype(np.uint8), alpha))
     cutout = Image.fromarray(rgba, "RGBA")
@@ -217,11 +271,29 @@ def main() -> None:
 
     for name, config in ASSETS.items():
         reference = Image.open(REFERENCE_DIR / config["file"])
-        isolated = isolate_character(reference, config["crop"], config["eye_boxes"])
+        isolated = isolate_character(
+            reference,
+            config["crop"],
+            config["eye_boxes"],
+            face_ellipse=config.get("face_ellipse"),
+        )
         result = fit_to_canvas(isolated, config["max_size"])
         output = OUTPUT_DIR / f"{name}.png"
         result.save(output, optimize=True)
         composite_preview(result, PREVIEW_DIR / f"{name}.jpg")
+        print(f"{output.relative_to(ROOT)}: {output.stat().st_size:,} bytes")
+
+    for index, reference_path in enumerate(BODY_POSES, start=1):
+        reference = Image.open(reference_path)
+        isolated = isolate_character(
+            reference,
+            (0, 0, reference.width, reference.height),
+            keep_largest=True,
+        )
+        result = fit_to_canvas(isolated, (1680, 1820))
+        output = OUTPUT_DIR / f"body-pose-{index}.png"
+        result.save(output, optimize=True)
+        composite_preview(result, PREVIEW_DIR / f"body-pose-{index}.jpg")
         print(f"{output.relative_to(ROOT)}: {output.stat().st_size:,} bytes")
 
     write_heart_svg()
