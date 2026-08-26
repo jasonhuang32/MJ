@@ -54,6 +54,14 @@ BODY_FACE_ELLIPSES = (
     (85, 115, 350, 374),
 )
 
+BODY_HEAD_OUTLINES = (
+    (375, -125, 690, 178),
+    (88, 265, 377, 523),
+    (142, 303, 432, 576),
+    (176, 250, 468, 524),
+    (72, 104, 362, 382),
+)
+
 
 def largest_component(mask: np.ndarray) -> np.ndarray:
     """Keep the character while discarding detached hearts and video marks."""
@@ -177,6 +185,7 @@ def isolate_character(
     crop: tuple[int, int, int, int],
     eye_boxes: tuple[tuple[int, int, int, int], ...] = (),
     face_ellipse: tuple[int, int, int, int] | None = None,
+    thread_guard_ellipse: tuple[int, int, int, int] | None = None,
     keep_largest: bool = False,
 ) -> Image.Image:
     image = source.convert("RGB").crop(crop)
@@ -222,6 +231,13 @@ def isolate_character(
         face_mask = Image.new("L", image.size)
         ImageDraw.Draw(face_mask).ellipse(face_ellipse, fill=255)
         alpha = np.maximum(alpha, np.asarray(face_mask, dtype=np.uint8))
+        if keep_largest and thread_guard_ellipse:
+            left, top, right, bottom = thread_guard_ellipse
+            guard_mask = Image.new("L", image.size)
+            ImageDraw.Draw(guard_mask).ellipse(thread_guard_ellipse, fill=255)
+            rows = np.indices(alpha.shape)[0]
+            upper_face = rows < top + round((bottom - top) * 0.3)
+            alpha[upper_face & (np.asarray(guard_mask) == 0)] = 0
     else:
         if eye_boxes:
             alpha[enclosed_bright_regions(pixels, eye_boxes)] = 255
@@ -301,6 +317,7 @@ def main() -> None:
             reference,
             (0, 0, reference.width, reference.height),
             face_ellipse=BODY_FACE_ELLIPSES[index - 1],
+            thread_guard_ellipse=BODY_HEAD_OUTLINES[index - 1],
             keep_largest=True,
         )
         result = fit_to_canvas(isolated, (1680, 1820))

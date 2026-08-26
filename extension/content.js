@@ -14,11 +14,9 @@
     },
     body: {
       poses: [
-        "assets-v2/body-pose-1.png",
-        "assets-v2/body-pose-2.png",
-        "assets-v2/body-pose-3.png",
-        "assets-v2/body-pose-4.png",
-        "assets-v2/body-pose-5.png",
+        { source: "assets-v2/body-pose-2.png", x: "1.81%", y: ".98%" },
+        { source: "assets-v2/body-pose-4.png", x: "8.06%", y: ".39%" },
+        { source: "assets-v2/body-pose-5.png", x: "3.56%", y: "-1.56%" },
       ],
       audio: "assets/body.m4a",
       duration: 3150,
@@ -26,6 +24,7 @@
   });
   const ALLOWED_TEXT_INPUT_TYPES = new Set(["", "text", "search"]);
   const MAX_ACTIVE_EFFECTS = 3;
+  const imagePreloads = new Map();
 
   let settings = { ...DEFAULT_SETTINGS };
   let compositionInProgress = false;
@@ -199,6 +198,31 @@
     return image;
   }
 
+  function preloadImage(source) {
+    if (imagePreloads.has(source)) return imagePreloads.get(source);
+    const promise = new Promise((resolve) => {
+      const image = new Image();
+      const finish = () => {
+        const decoding = typeof image.decode === "function" ? image.decode() : null;
+        if (decoding?.then) decoding.then(resolve, resolve);
+        else resolve();
+      };
+      image.onload = finish;
+      image.onerror = resolve;
+      image.src = chrome.runtime.getURL(source);
+    });
+    imagePreloads.set(source, promise);
+    return promise;
+  }
+
+  function preloadVariant(variant) {
+    const characterSources = variant.poses
+      ? variant.poses.map((pose) => pose.source)
+      : [variant.character];
+    if (variant.poses) characterSources.push("assets-v2/heart.svg");
+    return Promise.all(characterSources.map(preloadImage));
+  }
+
   function makeWebSvg(kind) {
     const namespace = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(namespace, "svg");
@@ -209,7 +233,7 @@
 
     const paths = kind === "head"
       ? ["M492 -40 C492 100 492 230 492 430", "M508 -40 C508 100 508 230 508 430"]
-      : ["M486 -40 C486 130 430 260 386 470", "M500 -40 C500 130 444 266 400 474"];
+      : ["M486 -40 C486 130 474 270 456 470", "M500 -40 C500 130 488 276 470 474"];
 
     for (const data of paths) {
       const path = document.createElementNS(namespace, "path");
@@ -260,15 +284,9 @@
     return animations;
   }
 
-  function animatePose(image, index, duration) {
-    const ranges = [
-      [0, .19],
-      [.19, .39],
-      [.39, .60],
-      [.60, .80],
-      [.80, 1],
-    ];
-    const [start, end] = ranges[index];
+  function animatePose(image, index, total, duration) {
+    const start = index / total;
+    const end = (index + 1) / total;
     const cut = .0001;
     const frames = [];
     if (start === 0) {
@@ -338,14 +356,15 @@
     const web = makeLayer("position:absolute;left:15%;top:-2%;width:70%;height:60%;pointer-events:none");
     web.append(makeWebSvg("body"));
     const character = makeLayer("position:absolute;left:14%;top:34%;width:72%;aspect-ratio:1;pointer-events:none");
-    variant.poses.forEach((source, index) => {
-      const pose = makeCharacter(source);
+    variant.poses.forEach((poseConfig, index) => {
+      const pose = makeCharacter(poseConfig.source);
       pose.style.position = "absolute";
       pose.style.inset = "0";
       pose.style.opacity = index === 0 ? "1" : "0";
       pose.style.zIndex = String(index + 1);
+      pose.style.transform = `translate(${poseConfig.x},${poseConfig.y})`;
       character.append(pose);
-      animations.push(animatePose(pose, index, variant.duration));
+      animations.push(animatePose(pose, index, variant.poses.length, variant.duration));
     });
     rig.append(web, character);
     layer.append(rig);
@@ -359,6 +378,15 @@
       { offset: .84, transform: "translate(-48%,-4%) rotate(7deg) scale(.95)" },
       { offset: 1, transform: "translate(-61%,-58%) rotate(-18deg) scale(.78)" },
     ], { duration: variant.duration, easing: "cubic-bezier(.34,.04,.23,1)", fill: "both" }));
+
+    animations.push(rig.animate([
+      { offset: 0, opacity: 0 },
+      { offset: .1499, opacity: 0 },
+      { offset: .15, opacity: 1 },
+      { offset: .68, opacity: 1 },
+      { offset: .6801, opacity: 0 },
+      { offset: 1, opacity: 0 },
+    ], { duration: variant.duration, easing: "linear", fill: "both" }));
 
     animations.push(character.animate([
       { transform: "rotate(4deg) translateY(0)" },
@@ -380,10 +408,12 @@
     return animations;
   }
 
-  function playEffect() {
+  async function playEffect() {
     if (!settings.enabled) return;
     const slug = chooseVariant();
     const variant = VARIANTS[slug];
+    await preloadVariant(variant);
+    if (!settings.enabled) return;
     const root = ensureOverlay();
 
     while (activeEffects.length >= MAX_ACTIVE_EFFECTS) discard(activeEffects[0]);
@@ -418,5 +448,11 @@
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === "MJ_PLAY_EFFECT" && window === window.top) playEffect();
+  });
+
+  queueMicrotask(() => {
+    if (window === window.top) {
+      for (const variant of Object.values(VARIANTS)) preloadVariant(variant);
+    }
   });
 })();

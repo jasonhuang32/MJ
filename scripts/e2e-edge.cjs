@@ -59,8 +59,14 @@ async function main() {
     await page.locator("#editor").pressSequentially("MJ");
     await page.waitForSelector('[id^="mj-effect-"]', { state: "attached", timeout: 3000 });
     assert.equal(await page.locator("#editor").textContent(), "MJ");
-    await page.waitForTimeout(820);
+    await page.waitForTimeout(520);
+    await page.screenshot({ path: path.join(root, "design", "previews", "e2e-body-start.png") });
+    await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(root, "design", "previews", "e2e-body.png") });
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: path.join(root, "design", "previews", "e2e-body-middle.png") });
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: path.join(root, "design", "previews", "e2e-body-late.png") });
     await page.waitForSelector('[id^="mj-effect-"]', { state: "detached", timeout: 5000 });
 
     await page.locator("#password").pressSequentially("mj");
