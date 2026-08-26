@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "MJ: 运行检查",
+      "dependsOrder": "sequence",
+      "dependsOn": ["MJ: 输入匹配测试", "MJ: 扩展结构验证"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "MJ: 输入匹配测试",
+      "type": "process",
+      "command": "C:\\Users\\ASUS\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+      "args": ["--test", "${workspaceFolder}\\tests\\detector.test.cjs"],
+      "problemMatcher": []
+    },
+    {
+      "label": "MJ: 扩展结构验证",
+      "type": "process",
+      "command": "C:\\Users\\ASUS\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+      "args": ["${workspaceFolder}\\scripts\\validate-extension.mjs"],
+      "problemMatcher": []
+    }
+  ]
+}

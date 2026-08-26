@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MJ 特效</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="icons/icon-48.png" alt="" />
+        <div>
+          <h1>MJ 特效</h1>
+          <p>输入 mj，蜘蛛侠登场</p>
+        </div>
+      </header>
+
+      <label class="switch-row">
+        <span><strong>启用特效</strong><small>在网页编辑区监听 mj</small></span>
+        <input id="enabled" type="checkbox" />
+      </label>
+
+      <label class="switch-row">
+        <span><strong>播放声音</strong><small>使用样例中的对应原声</small></span>
+        <input id="sound" type="checkbox" />
+      </label>
+
+      <label class="select-row" for="variant">
+        <span><strong>动效模式</strong><small>默认随机播放两种效果</small></span>
+        <select id="variant">
+          <option value="random">随机</option>
+          <option value="head">大头倒挂版</option>
+          <option value="body">全身爱心版</option>
+        </select>
+      </label>
+
+      <p id="saved" role="status" aria-live="polite"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "MJ 蜘蛛侠特效",
+  "version": "0.1.0",
+  "description": "在网页编辑区输入 mj，随机播放两种蜘蛛侠摆荡特效。",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "MJ 特效",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/detector.js", "content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*.png", "assets/*.m4a"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
+

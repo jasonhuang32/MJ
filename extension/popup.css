@@ -1,0 +1,86 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #172033;
+  background: #f5f7fb;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+main { padding: 18px; }
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 2px 16px;
+}
+
+header img { width: 48px; height: 48px; }
+h1 { margin: 0; font-size: 19px; }
+header p { margin: 3px 0 0; color: #667085; font-size: 12px; }
+
+.switch-row,
+.select-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 64px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1px solid #e4e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+label span { display: grid; gap: 4px; }
+strong { font-size: 14px; font-weight: 650; }
+small { color: #7b8496; font-size: 11px; }
+
+input[type="checkbox"] {
+  appearance: none;
+  width: 42px;
+  height: 24px;
+  padding: 2px;
+  border-radius: 999px;
+  background: #c6ccd7;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+input[type="checkbox"]::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px #0003;
+  transition: transform 150ms ease;
+}
+
+input[type="checkbox"]:checked { background: #df2638; }
+input[type="checkbox"]:checked::before { transform: translateX(18px); }
+
+select {
+  max-width: 112px;
+  padding: 7px 8px;
+  border: 1px solid #ccd2dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #273044;
+  font: inherit;
+  font-size: 12px;
+}
+
+#saved {
+  min-height: 16px;
+  margin: 4px 2px 0;
+  text-align: right;
+  color: #45834f;
+  font-size: 11px;
+}
+
