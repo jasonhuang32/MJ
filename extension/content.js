@@ -263,27 +263,27 @@
   function animatePose(image, index, duration) {
     const ranges = [
       [0, .19],
-      [.16, .39],
-      [.36, .60],
-      [.57, .80],
-      [.77, 1],
+      [.19, .39],
+      [.39, .60],
+      [.60, .80],
+      [.80, 1],
     ];
     const [start, end] = ranges[index];
-    const fade = .018;
+    const cut = .0001;
     const frames = [];
     if (start === 0) {
       frames.push({ offset: 0, opacity: 1 });
     } else {
       frames.push(
         { offset: 0, opacity: 0 },
-        { offset: Math.max(0, start - fade), opacity: 0 },
+        { offset: Math.max(0, start - cut), opacity: 0 },
         { offset: start, opacity: 1 },
       );
     }
     frames.push({ offset: end, opacity: 1 });
     if (end < 1) {
       frames.push(
-        { offset: Math.min(1, end + fade), opacity: 0 },
+        { offset: Math.min(1, end + cut), opacity: 0 },
         { offset: 1, opacity: 0 },
       );
     }

@@ -42,6 +42,18 @@ BODY_POSES = tuple(
     REFERENCE_DIR / "body-poses" / f"pose-{index}.png" for index in range(1, 6)
 )
 
+# Inset circles for the round mask in each source frame. Keeping the exact
+# source pixels inside the mask preserves both white lenses and their black
+# rims, even where a lens is connected to the light video background after
+# compression.
+BODY_FACE_ELLIPSES = (
+    (390, -112, 674, 166),
+    (100, 274, 365, 516),
+    (154, 314, 418, 568),
+    (178, 252, 466, 522),
+    (85, 115, 350, 374),
+)
+
 
 def largest_component(mask: np.ndarray) -> np.ndarray:
     """Keep the character while discarding detached hearts and video marks."""
@@ -288,6 +300,7 @@ def main() -> None:
         isolated = isolate_character(
             reference,
             (0, 0, reference.width, reference.height),
+            face_ellipse=BODY_FACE_ELLIPSES[index - 1],
             keep_largest=True,
         )
         result = fit_to_canvas(isolated, (1680, 1820))
