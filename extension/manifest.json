@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "MJ 蜘蛛侠特效",
-  "version": "0.1.0",
-  "description": "在网页编辑区输入 mj，随机播放两种蜘蛛侠摆荡特效。",
+  "version": "0.2.0",
+  "description": "在网页编辑区输入 mj，随机播放两种高清分层蜘蛛侠摆荡特效。",
   "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
@@ -35,9 +35,8 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["assets/*.png", "assets/*.m4a"],
+      "resources": ["assets/*.m4a", "assets-v2/*.png", "assets-v2/*.svg"],
       "matches": ["<all_urls>"]
     }
   ]
 }
-

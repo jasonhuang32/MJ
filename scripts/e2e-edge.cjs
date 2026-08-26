@@ -37,22 +37,37 @@ async function main() {
   });
 
   try {
+    let [worker] = context.serviceWorkers();
+    if (!worker) worker = await context.waitForEvent("serviceworker", { timeout: 5000 });
+    const setVariant = (variant) => worker.evaluate(
+      (value) => new Promise((resolve) => chrome.storage.local.set({ variant: value }, resolve)),
+      variant
+    );
+
     const page = await context.newPage();
     await page.goto(`http://127.0.0.1:${port}/`);
 
+    await setVariant("head");
     await page.locator("#search").pressSequentially("mJ");
     await page.waitForSelector('[id^="mj-effect-"]', { state: "attached", timeout: 3000 });
     assert.equal(await page.locator("#search").inputValue(), "mJ");
+    await page.waitForTimeout(820);
+    await page.screenshot({ path: path.join(root, "design", "previews", "e2e-head.png") });
     await page.waitForSelector('[id^="mj-effect-"]', { state: "detached", timeout: 5000 });
 
+    await setVariant("body");
     await page.locator("#editor").pressSequentially("MJ");
     await page.waitForSelector('[id^="mj-effect-"]', { state: "attached", timeout: 3000 });
     assert.equal(await page.locator("#editor").textContent(), "MJ");
+    await page.waitForTimeout(820);
+    await page.screenshot({ path: path.join(root, "design", "previews", "e2e-body.png") });
     await page.waitForSelector('[id^="mj-effect-"]', { state: "detached", timeout: 5000 });
 
     await page.locator("#password").pressSequentially("mj");
     await page.waitForTimeout(350);
     assert.equal(await page.locator('[id^="mj-effect-"]').count(), 0);
+
+    await setVariant("random");
 
     console.log("Edge 端到端验证通过：文本框、contenteditable、输入保留、自动清理、密码框排除");
   } finally {
@@ -66,4 +81,3 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-

@@ -1,6 +1,7 @@
 .work/
 node_modules/
 .pnpm-store/
+design/previews/
 *.log
 .DS_Store
 Thumbs.db

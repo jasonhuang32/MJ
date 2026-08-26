@@ -1,6 +1,6 @@
 {
   "name": "mj-edge-effect",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Edge extension that plays the supplied MJ Spider-Man effects in editable fields.",
   "scripts": {

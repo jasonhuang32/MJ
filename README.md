@@ -1,6 +1,8 @@
 # MJ 蜘蛛侠特效（Edge 个人版）
 
-在网页搜索框、评论区、文本框或其他可编辑区域中输入 `mj`，扩展会随机播放样例中的两种卡通蜘蛛侠摆荡特效，并播放对应声音。匹配不区分大小写，输入的 `mj` 会原样保留。
+在网页搜索框、评论区、文本框或其他可编辑区域中输入 `mj`，扩展会随机播放两种高清卡通蜘蛛侠摆荡特效，并播放对应声音。匹配不区分大小写，输入的 `mj` 会原样保留。
+
+0.2 版使用两张 2048×2048 透明角色 PNG、独立 SVG 蛛丝和 SVG 爱心，通过 Web Animations 分层运动；不再播放从手机录屏逐帧抠出的 APNG。
 
 ## 安装到 Edge
 
@@ -32,24 +34,26 @@
 
 ```text
 extension/              可直接加载到 Edge 的扩展
-  assets/               两种透明动画和对应音频
+  assets/               两种对应音频
+  assets-v2/            2K 透明角色和 SVG 爱心
   icons/                扩展图标
   lib/detector.js       mj 匹配规则
   content.js            输入监听与动效播放
   background.js         iframe 转发与声音状态
   popup.*               设置面板
 sample/                 用户提供的原始样例
-scripts/                素材构建与结构验证脚本
+design/references/      从高清样例提取的角色参考帧
+scripts/                分层素材构建与结构验证脚本
 tests/                  输入匹配自动测试
 SPEC.md                 已确认的产品与技术规格
 ```
 
 ## 重新生成素材
 
-素材已经随扩展提交，正常使用不需要重新生成。若要从原始样例重新处理，需要 Python（Pillow、NumPy）和 FFmpeg：
+素材已经随扩展提交，正常使用不需要重新生成。若要从高清参考帧重新生成 2K 透明角色和 SVG 爱心，需要 Python、Pillow 和 NumPy：
 
 ```powershell
-python scripts/process_assets.py --ffmpeg "C:\path\to\ffmpeg.exe"
+python scripts/build_layered_assets.py
 ```
 
 ## 隐私

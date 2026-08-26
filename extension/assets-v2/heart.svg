@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 236">
+  <defs>
+    <linearGradient id="heartFill" x1="0.28" y1="0.04" x2="0.68" y2="0.95">
+      <stop offset="0" stop-color="#ffb9dc"/>
+      <stop offset="0.34" stop-color="#ff72b4"/>
+      <stop offset="0.72" stop-color="#f5368c"/>
+      <stop offset="1" stop-color="#d91667"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.32" cy="0.2" r="0.48">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.82"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path d="M128 220C105 198 26 142 18 82 11 32 49 8 84 17c22 6 36 22 44 39 8-17 22-33 44-39 35-9 73 15 66 65-8 60-87 116-110 138Z" fill="url(#heartFill)" stroke="#3a152d" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M46 72c4-27 24-39 43-34 13 3 22 13 28 25-25-11-48-7-71 9Z" fill="url(#shine)"/>
+</svg>

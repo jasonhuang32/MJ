@@ -15,10 +15,11 @@ const required = [
   "popup.css",
   "popup.js",
   "lib/detector.js",
-  "assets/head.png",
   "assets/head.m4a",
-  "assets/body.png",
   "assets/body.m4a",
+  "assets-v2/head-character.png",
+  "assets-v2/body-character.png",
+  "assets-v2/heart.svg",
   "icons/icon-16.png",
   "icons/icon-32.png",
   "icons/icon-48.png",
@@ -50,4 +51,3 @@ if (errors.length) {
 }
 
 console.log(`扩展结构验证通过（${required.length} 个必要文件）`);
-
